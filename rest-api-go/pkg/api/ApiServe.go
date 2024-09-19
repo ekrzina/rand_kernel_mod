@@ -1,10 +1,11 @@
 package apiserve
 
 import (
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ApiHandler struct {
@@ -12,18 +13,20 @@ type ApiHandler struct {
 }
 
 /* To be replaced with kernel module */
-func getRandomNumber(w http.ResponseWriter, r *http.Request) {
+func getRandomNumber(c *gin.Context) {
 	randomNumber := rand.Intn(10000)
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(randomNumber)
+	c.JSON(http.StatusOK, gin.H{
+		"randomNumber": randomNumber,
+	})
 }
 
 /* Serves REST API on specified port */
 func (t *ApiHandler) HandleRequests() {
-	fmt.Printf("Server started on port %s...", t.Port)
-	http.Handle("/randnumber", http.HandlerFunc(getRandomNumber))
-	err := http.ListenAndServe(":"+t.Port, nil)
+	router := gin.Default()
+	router.GET("/randnumber", getRandomNumber)
+
+	fmt.Printf("Server started on port %s...\n", t.Port)
+	err := router.Run(":" + t.Port)
 	if err != nil {
 		fmt.Println("Error starting server: ", err)
 	}
