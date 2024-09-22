@@ -4,18 +4,17 @@
 #include <linux/uaccess.h>
 #include <linux/random.h>
 
-# define PROC_NAME "rngen"
+#define PROC_NAME "rngen"
+
 static ssize_t random_number_gen(struct file *file, char __user *buf, size_t count, loff_t *offset);
 
-static struct file_operations proc_fops = {
-    .owner = THIS_MODULE,
-    .read = random_number_gen,
+static struct proc_ops proc_fops = {
+    .proc_read = random_number_gen,
 };
 
 // function for generating and returning a random number, used with profcs
 // proc filesystem can be read multiple times by user-space -> offset keeps track -> no need for 'for' loop
 static ssize_t random_number_gen(struct file *file, char __user *buf, size_t count, loff_t *offset) {
-    
     unsigned int random_number;
     char buffer[32];
     ssize_t len;
@@ -23,30 +22,29 @@ static ssize_t random_number_gen(struct file *file, char __user *buf, size_t cou
     get_random_bytes(&random_number, sizeof(random_number));
     // converts to string for profcs
     len = snprintf(buffer, sizeof(buffer), "%u\n", random_number);
-
+    
     // check if all data is read
     if (*offset >= len) {
-        // eof
-        return 0;
+        return 0; // EOF
     }
-    // copy data from kernel space (buffer) to use space (buf)
-    // returns non-zero if fails
+
+    // copy data from kernel space (buffer) to user space (buf)
     if (copy_to_user(buf, buffer + *offset, len - *offset)) {
         return -EFAULT;
     }
-
-    // update after read
+    
+    // update after one read 
     *offset += len;
     return len;
-
 }
 
-static __init rn_init(void) {
+static int __init rn_init(void) {
     proc_create(PROC_NAME, 0, NULL, &proc_fops);
     printk(KERN_INFO "Loaded random number module.\n");
+    return 0; // Return success
 }
 
-static __exit rn_exit(void) {
+static void __exit rn_exit(void) {
     remove_proc_entry(PROC_NAME, NULL);
     printk(KERN_INFO "Exiting random number module.\n");
 }
