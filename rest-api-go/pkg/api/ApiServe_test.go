@@ -23,7 +23,7 @@ func TestReadFromModule(t *testing.T) {
 	handler := ApiHandler{FileName: tmpfile.Name()}
 	randomNumber, err := handler.ReadFromModule()
 	assert.NoError(t, err)
-	assert.Equal(t, 42, randomNumber)
+	assert.Equal(t, int64(42), randomNumber)
 }
 
 /* Tests GIN starting and reading from temporary file */
