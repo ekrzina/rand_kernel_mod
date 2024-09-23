@@ -50,7 +50,7 @@ static ssize_t random_number_gen(struct file *file, char __user *buf, size_t cou
 static int __init rn_init(void) {
     proc_create(PROC_NAME, 0, NULL, &proc_fops);
     printk(KERN_INFO "rngen: Loaded random number module.\n");
-    return 0; // Return success
+    return 0;
 }
 
 static void __exit rn_exit(void) {
